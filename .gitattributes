@@ -1,0 +1,11 @@
+* text=lf eol=lf
+*.png binary
+*.jpeg binary
+*.jpg binary
+*.svg -text
+*.mp4 binary
+*.radio binary
+*.ttf binary
+*.woff binary
+*.eot binary
+*.ico binary

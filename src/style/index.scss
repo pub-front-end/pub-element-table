@@ -1,0 +1,11 @@
+.ve-table:before,
+.ve-table:after {
+  display: table;
+  content: '';
+}
+.ve-table:after {
+  clear: both;
+}
+.ve-table__pagination {
+  margin: 10px 0px;
+}
