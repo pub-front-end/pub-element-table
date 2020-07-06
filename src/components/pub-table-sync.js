@@ -48,13 +48,14 @@ export default {
     }
   },
   methods: {
-    _httpRequest ({ pageSize, currentPage, ...other }) {
+    _httpRequest ({ pageSize, currentPage, ...other }, ...rest) {
       const queryInfo = {
-        [this.propsMap.pageSize]: pageSize,
-        [this.propsMap.currentPage]: currentPage,
-        ...other
+        ...this.params,
+        ...other,
+        [this.propsMap.pageSize]: other[this.propsMap.pageSize] || pageSize,
+        [this.propsMap.currentPage]: other[this.propsMap.currentPage] || currentPage,
       };
-      if (isFunction(this.httpRequest)) return this.httpRequest(queryInfo);
+      if (isFunction(this.httpRequest)) return this.httpRequest(queryInfo, ...rest);
       const options = { method: 'get', ...this.httpRequest };
       if (options.method === 'get') {
         options.params = Object.assign({}, options.params || {}, queryInfo);
@@ -70,10 +71,10 @@ export default {
       this.innerLoading = true;
 
       const payload = {
+        ...this.params,
+        ...other,
         pageSize: pageSize || this.innerPageSize,
         currentPage: currentPage || this.innerCurrentPage,
-        ...this.params,
-        ...other
       };
       Promise.resolve(this._httpRequest(payload))
         .then(val => {
@@ -83,12 +84,21 @@ export default {
           if (!isCurrent) return;
           if (isArray(val)) {
             this.curTableData = val;
+            this.innerPageSize = 1;
+            this.innerCurrentPage = 1;
+            this.innerTotal = this.curTableData.length;
           } else {
             this.curTableData = get(val, this.propsMap.data, []);
-            this.innerTotal = this.propsMap.total
-              ? parseInt(get(val, this.propsMap.total, this.innerTotal))
-              : this.innerTotal;
+            this.innerPageSize = parseInt(get(val, this.propsMap.pageSize, 10));
+            this.innerCurrentPage = parseInt(get(val, this.propsMap.currentPage, 1));
+            this.innerTotal = parseInt(get(val, this.propsMap.total, this.innerTotal));
           }
+          this.$emit('data-change', {
+            [this.propsMap.data]: this.curTableData,
+            [this.propsMap.pageSize]: this.innerPageSize,
+            [this.propsMap.currentPage]: this.innerCurrentPage,
+            [this.propsMap.total]: this.innerTotal,
+          })
           this.innerLoading = false;
         })
         .catch(() => (this.innerLoading = false));
